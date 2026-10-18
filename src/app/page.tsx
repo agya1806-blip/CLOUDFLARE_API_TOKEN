@@ -16,6 +16,7 @@ export default function WorkspacePage() {
 
   const [files, setFiles] = useState<GitHubFileNode[]>([]);
   const [selectedFile, setSelectedFile] = useState<string>("");
+  const [selectedModel, setSelectedModel] = useState<string>("gemini-2.5-flash");
   const [isExplorerOpen, setIsExplorerOpen] = useState(false);
   const [isLoadingRepo, setIsLoadingRepo] = useState(true);
   const [repoInfo, setRepoInfo] = useState({ repo: "CLOUDFLARE_API_TOKEN", branch: "main" });
@@ -69,12 +70,18 @@ export default function WorkspacePage() {
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-studio-bg">
-      <Navbar repoName={repoInfo.repo} branchName={repoInfo.branch} />
+      <Navbar
+        repoName={repoInfo.repo}
+        branchName={repoInfo.branch}
+        selectedModel={selectedModel}
+        onSelectModel={(model) => setSelectedModel(model)}
+      />
 
       <main className="flex flex-1 overflow-hidden relative">
         <ChatEditor
           files={files}
           selectedFile={selectedFile}
+          selectedModel={selectedModel}
           onOpenExplorer={() => setIsExplorerOpen(true)}
         />
 

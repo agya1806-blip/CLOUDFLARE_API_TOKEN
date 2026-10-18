@@ -11,7 +11,8 @@ function getGeminiClient() {
 export async function processCodeModificationWithGemini(
   filePath: string,
   currentCode: string,
-  userInstruction: string
+  userInstruction: string,
+  modelName: string = "gemini-2.5-flash"
 ): Promise<{ explanation: string; fullUpdatedCode: string }> {
   const ai = getGeminiClient();
 
@@ -38,8 +39,10 @@ ${currentCode}
 User Instruction: ${userInstruction}
 `;
 
+  const validModel = modelName || "gemini-2.5-flash";
+
   const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
+    model: validModel,
     contents: userPrompt,
     config: {
       systemInstruction: systemInstruction,

@@ -11,13 +11,14 @@ export async function GET(req: NextRequest) {
 
   const { searchParams } = new URL(req.url);
   const filePath = searchParams.get("path");
+  const repoParam = searchParams.get("repo");
 
   if (!filePath) {
     return NextResponse.json({ error: "Missing path parameter" }, { status: 400 });
   }
 
   const owner = process.env.TARGET_REPO_OWNER || "agya1806-blip";
-  const repo = process.env.TARGET_REPO_NAME || "CLOUDFLARE_API_TOKEN";
+  const repo = repoParam || process.env.TARGET_REPO_NAME || "CLOUDFLARE_API_TOKEN";
   const branch = process.env.TARGET_REPO_BRANCH || "main";
 
   try {

@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { message, selectedFile } = body;
+    const { message, selectedFile, selectedModel } = body;
 
     if (!message || !selectedFile) {
       return NextResponse.json(
@@ -28,13 +28,16 @@ export async function POST(req: NextRequest) {
 
     const { content: originalContent } = await fetchFileContent(owner, repo, selectedFile, branch);
 
+    const modelToUse = selectedModel || "gemini-2.5-flash";
+
     const { explanation, fullUpdatedCode } = await processCodeModificationWithGemini(
       selectedFile,
       originalContent,
-      message
+      message,
+      modelToUse
     );
 
-    const commitMsg = `AI Edit (${selectedFile}): ${message.slice(0, 50)}`;
+    const commitMsg = `AI Edit (${selectedFile}) [${modelToUse}]: ${message.slice(0, 40)}`;
     const { commitSha, commitUrl } = await commitAndPushFile(
       owner,
       repo,

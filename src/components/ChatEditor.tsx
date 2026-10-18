@@ -3,17 +3,19 @@
 import React, { useState, useRef, useEffect } from "react";
 import { ChatMessage, GitHubFileNode } from "@/types";
 import DiffViewer from "./DiffViewer";
-import { FolderOpen, Send, Sparkles, Loader2, Bot, User } from "lucide-react";
+import { FolderOpen, Send, Loader2, Bot, User } from "lucide-react";
 
 interface ChatEditorProps {
   files: GitHubFileNode[];
   selectedFile: string;
+  selectedModel: string;
   onOpenExplorer: () => void;
 }
 
 export default function ChatEditor({
   files,
   selectedFile,
+  selectedModel,
   onOpenExplorer,
 }: ChatEditorProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([
@@ -21,7 +23,7 @@ export default function ChatEditor({
       id: "welcome",
       role: "assistant",
       content:
-        "Halo! Saya Gemini 2.5 AI Agent di Mughis Mobile Studio. Pilih file dari repositori, lalu ketik instruksi kode yang ingin Anda buat atau ubah.",
+        "Halo! Saya Gemini AI Agent di Mughis Mobile Studio. Pilih model AI & file dari repositori, lalu ketik instruksi kode yang ingin Anda ubah.",
       timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     },
   ]);
@@ -66,6 +68,7 @@ export default function ChatEditor({
         body: JSON.stringify({
           message: promptText,
           selectedFile: selectedFile,
+          selectedModel: selectedModel,
         }),
       });
 
@@ -142,7 +145,7 @@ export default function ChatEditor({
               {msg.role === "assistant" ? (
                 <>
                   <Bot className="h-3.5 w-3.5 text-studio-accent" />
-                  <span className="font-semibold text-studio-accent">Gemini AI Agent</span>
+                  <span className="font-semibold text-studio-accent">Gemini AI Agent ({selectedModel})</span>
                 </>
               ) : (
                 <>
@@ -179,7 +182,7 @@ export default function ChatEditor({
         {isLoading && (
           <div className="flex items-center space-x-2 rounded-2xl bg-studio-sidebar border border-studio-border p-3 w-fit text-xs text-studio-textSecondary">
             <Loader2 className="h-4 w-4 animate-spin text-studio-accent" />
-            <span>Gemini AI sedang membaca kode & melakukan commit ke GitHub...</span>
+            <span>Gemini AI ({selectedModel}) sedang membaca kode & commit ke GitHub...</span>
           </div>
         )}
 
@@ -207,7 +210,7 @@ export default function ChatEditor({
             onKeyDown={(e) => e.key === "Enter" && handleSend()}
             placeholder={
               selectedFile
-                ? `Perintahkan Gemini untuk mengedit ${selectedFile}...`
+                ? `Perintahkan Gemini (${selectedModel}) untuk mengedit ${selectedFile}...`
                 : "Pilih file dari Explorer untuk mulai chat..."
             }
             disabled={isLoading}

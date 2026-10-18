@@ -10,16 +10,24 @@ import StatusBar from "@/components/StatusBar";
 import { GitHubFileNode } from "@/types";
 import { Loader2 } from "lucide-react";
 
+interface RepoItem {
+  name: string;
+  fullName: string;
+  defaultBranch: string;
+}
+
 export default function WorkspacePage() {
   const { data: session, status } = useSession();
   const router = useRouter();
 
+  const [allRepos, setAllRepos] = useState<RepoItem[]>([]);
+  const [selectedRepo, setSelectedRepo] = useState<string>("CLOUDFLARE_API_TOKEN");
   const [files, setFiles] = useState<GitHubFileNode[]>([]);
   const [selectedFile, setSelectedFile] = useState<string>("");
   const [selectedModel, setSelectedModel] = useState<string>("gemini-2.5-flash");
   const [isExplorerOpen, setIsExplorerOpen] = useState(false);
   const [isLoadingRepo, setIsLoadingRepo] = useState(true);
-  const [repoInfo, setRepoInfo] = useState({ repo: "CLOUDFLARE_API_TOKEN", branch: "main" });
+  const [repoBranch, setRepoBranch] = useState("main");
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -29,23 +37,43 @@ export default function WorkspacePage() {
 
   useEffect(() => {
     if (status === "authenticated") {
-      fetchRepoTree();
+      fetchAllUserRepos();
     }
   }, [status]);
 
-  const fetchRepoTree = async () => {
+  useEffect(() => {
+    if (status === "authenticated" && selectedRepo) {
+      fetchRepoTree(selectedRepo);
+    }
+  }, [selectedRepo, status]);
+
+  const fetchAllUserRepos = async () => {
+    try {
+      const res = await fetch("/api/github/repos");
+      const data = await res.json();
+      if (res.ok && data.repos) {
+        setAllRepos(data.repos);
+      }
+    } catch (err) {
+      console.error("Gagal memuat daftar repositori:", err);
+    }
+  };
+
+  const fetchRepoTree = async (repoName: string) => {
     setIsLoadingRepo(true);
     try {
-      const res = await fetch("/api/github/tree");
+      const res = await fetch(`/api/github/tree?repo=${encodeURIComponent(repoName)}`);
       const data = await res.json();
       if (res.ok && data.tree) {
         setFiles(data.tree);
-        setRepoInfo({ repo: data.repo, branch: data.branch });
+        setRepoBranch(data.branch || "main");
         if (data.tree.length > 0) {
           const srcFile = data.tree.find((f: GitHubFileNode) =>
             f.path.startsWith("src/") || f.path.endsWith(".tsx") || f.path.endsWith(".js")
           );
           setSelectedFile(srcFile ? srcFile.path : data.tree[0].path);
+        } else {
+          setSelectedFile("");
         }
       }
     } catch (error) {
@@ -55,7 +83,7 @@ export default function WorkspacePage() {
     }
   };
 
-  if (status === "loading" || isLoadingRepo) {
+  if (status === "loading" || (isLoadingRepo && files.length === 0)) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-studio-bg text-studio-textPrimary">
         <Loader2 className="h-8 w-8 animate-spin text-studio-accent mb-3" />
@@ -71,8 +99,10 @@ export default function WorkspacePage() {
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-studio-bg">
       <Navbar
-        repoName={repoInfo.repo}
-        branchName={repoInfo.branch}
+        repoName={selectedRepo}
+        branchName={repoBranch}
+        allRepos={allRepos}
+        onSelectRepo={(repo) => setSelectedRepo(repo)}
         selectedModel={selectedModel}
         onSelectModel={(model) => setSelectedModel(model)}
       />
@@ -82,6 +112,7 @@ export default function WorkspacePage() {
           files={files}
           selectedFile={selectedFile}
           selectedModel={selectedModel}
+          targetRepo={selectedRepo}
           onOpenExplorer={() => setIsExplorerOpen(true)}
         />
 
@@ -94,7 +125,7 @@ export default function WorkspacePage() {
         />
       </main>
 
-      <StatusBar branchName={repoInfo.branch} selectedFile={selectedFile} />
+      <StatusBar branchName={repoBranch} selectedFile={selectedFile} />
     </div>
   );
 }

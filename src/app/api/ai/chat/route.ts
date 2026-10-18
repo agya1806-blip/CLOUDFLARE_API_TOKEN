@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { message, selectedFile, selectedModel } = body;
+    const { message, selectedFile, selectedModel, targetRepo } = body;
 
     if (!message || !selectedFile) {
       return NextResponse.json(
@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
     }
 
     const owner = process.env.TARGET_REPO_OWNER || "agya1806-blip";
-    const repo = process.env.TARGET_REPO_NAME || "CLOUDFLARE_API_TOKEN";
+    const repo = targetRepo || process.env.TARGET_REPO_NAME || "CLOUDFLARE_API_TOKEN";
     const branch = process.env.TARGET_REPO_BRANCH || "main";
 
     const { content: originalContent } = await fetchFileContent(owner, repo, selectedFile, branch);

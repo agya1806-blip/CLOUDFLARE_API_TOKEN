@@ -2,15 +2,29 @@
 
 import React from "react";
 import { signOut, useSession } from "next-auth/react";
-import { Cpu, GitBranch, LogOut, Terminal } from "lucide-react";
+import { Cpu, GitBranch, LogOut, Terminal, ChevronDown } from "lucide-react";
 
 interface NavbarProps {
   repoName: string;
   branchName: string;
+  selectedModel: string;
+  onSelectModel: (model: string) => void;
 }
 
-export default function Navbar({ repoName, branchName }: NavbarProps) {
+export default function Navbar({
+  repoName,
+  branchName,
+  selectedModel,
+  onSelectModel,
+}: NavbarProps) {
   const { data: session } = useSession();
+
+  const availableModels = [
+    { id: "gemini-2.5-flash", name: "Gemini 2.5 Flash (Super Fast)" },
+    { id: "gemini-2.5-pro", name: "Gemini 2.5 Pro (Deep Reasoning)" },
+    { id: "gemini-1.5-pro", name: "Gemini 1.5 Pro (Large Context)" },
+    { id: "gemini-1.5-flash", name: "Gemini 1.5 Flash (Standard)" },
+  ];
 
   return (
     <header className="sticky top-0 z-40 flex items-center justify-between bg-studio-header px-4 py-2.5 border-b border-studio-border text-studio-textPrimary select-none">
@@ -23,7 +37,7 @@ export default function Navbar({ repoName, branchName }: NavbarProps) {
             Mughis Mobile Studio
           </h1>
           <div className="flex items-center space-x-1.5 mt-0.5 text-xs text-studio-textSecondary">
-            <span className="truncate max-w-[120px] font-mono">{repoName}</span>
+            <span className="truncate max-w-[110px] font-mono">{repoName}</span>
             <span>â€¢</span>
             <span className="flex items-center text-studio-success font-mono">
               <GitBranch className="h-3 w-3 mr-0.5" />
@@ -34,9 +48,21 @@ export default function Navbar({ repoName, branchName }: NavbarProps) {
       </div>
 
       <div className="flex items-center space-x-2">
-        <div className="hidden sm:flex items-center space-x-1 rounded-full bg-studio-sidebar px-2.5 py-1 text-xs text-studio-textSecondary border border-studio-border">
-          <Cpu className="h-3 w-3 text-studio-accent" />
-          <span>Gemini 2.5</span>
+        {/* Model Selector Dropdown */}
+        <div className="relative flex items-center bg-studio-sidebar border border-studio-border rounded-lg px-2 py-1 text-xs text-studio-accent font-semibold">
+          <Cpu className="h-3.5 w-3.5 mr-1.5 text-studio-accent" />
+          <select
+            value={selectedModel}
+            onChange={(e) => onSelectModel(e.target.value)}
+            className="bg-transparent text-studio-textPrimary focus:outline-none cursor-pointer pr-4 font-mono text-xs appearance-none"
+          >
+            {availableModels.map((m) => (
+              <option key={m.id} value={m.id} className="bg-studio-sidebar text-studio-textPrimary">
+                {m.name}
+              </option>
+            ))}
+          </select>
+          <ChevronDown className="h-3 w-3 text-studio-textSecondary absolute right-1.5 pointer-events-none" />
         </div>
 
         {session?.user && (
